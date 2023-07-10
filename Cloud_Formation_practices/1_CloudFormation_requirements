@@ -1,0 +1,6 @@
+# Create Default VPC
+# Generate 2 AWS Key pairs (CloudF_Key_1 and 2)
+# Get free AWS AMI image (ami-0e820afa569e84cc1)
+
+# !Ref >>> You can refer any input from the perameter section
+# !Fn::Select: or !Select [0, SecurityGroupPorts] >> By using this you can get the first peramter inputs form the SGPorts

@@ -1,0 +1,89 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template for creation of RDBS service 
+
+Parameters:                                             # Perameter always on top ref to the instance
+  OGSDBName:
+    NoEcho: 'False'
+    Default: OGSDB
+    Description: Default OGSDB uses
+    Type: String
+    MinLength: '4'
+    MaxLength: '16'
+    ConstraintDescription: Must select DB Name
+  OGSInstanceClass:
+    Description: choose one of the DB
+    Type: String
+    AllowedValues:
+      - db.t2.micro
+      - db.t2.small
+      - db.t2.medium
+  OGSVpc:
+    Type: List<AWS::EC2::VPC::Id>
+    Description: Select your VPC
+  OGSSubnet:
+    Type: List<AWS::EC2::Subnet::Id>
+    Description: choose your Subnet of your OGS
+  OGSUserName:
+    NoEcho: 'false'
+    Type: String
+    Description: Provide DB userName
+    MinLength: '4'
+    MaxLength: '16'
+    AllowedPattern: '[a-zA-Z][a-zA-Z0-9]*'
+  OGSUserPassword:
+    NoEcho: 'True'
+    Type: String
+    Description: Provide DB password
+  OGSDBAllocatedStorage:
+    Type: Number
+    Description: Database storage size in GB
+    Default: '8'
+    MinValue: '8'
+    MaxValue: '20'
+    ConstraintDescription: Plase select atleast one value
+  OGSMultiAZ:
+    Type: String
+    Description: Require Multi AZ or not.
+    AllowedValues:
+      - True
+      - False
+    ConstraintDescription: It should be true or false
+
+Resources:                                                  # This is the main resource location under perametes
+ OGSDatabaseSecurity:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This is for just security for my RDS DB
+      VpcId: !Ref OGSVpc
+      SecurityGroupIngress:
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: 3306
+          ToPort: 3306
+          IpProtocol: tcp
+ OGSDbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Build for RDS purpose
+      SubnetIds:
+        - subnet-0aa92b80f38028a9e 
+        - subnet-0d7ff81fc3292c472 
+        - subnet-0d5f2b087321ed1e2 
+        - subnet-0e3669d281fbf0e38 
+        - subnet-0b56b8b693642bf5a 
+        - subnet-04c86a6d46e3f6d75 
+        - subnet-014b652bd82569f4c
+
+ OGSDatabaseInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: !Ref OGSInstanceClass               # All resources were reference by prameters
+      Engine: mariadb
+      MultiAZ: !Ref OGSMultiAZ
+      PubliclyAccessible: true
+      AllocatedStorage: !Ref OGSDBAllocatedStorage
+      MasterUsername: !Ref OGSUserName
+      MasterUserPassword: !Ref OGSUserPassword
+      DBSubnetGroupName: !Ref OGSDbSubnetGroup
+      VPCSecurityGroups:
+        - !Ref OGSDatabaseSecurity

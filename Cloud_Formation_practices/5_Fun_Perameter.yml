@@ -1,0 +1,84 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template for RDBS service 
+
+Parameters:                                             # Perameter always on top ref to the instance
+  DBName:
+    NoEcho: true                                      # if you give Noecho it will show like secret **** dbname on perameter section
+    Default: OGSDB
+    Description: Default OGSDB uses
+    Type: String
+    MinLength: '4'
+    MaxLength: '16'
+    ConstraintDescription: Must select DB Name
+  OGSInstanceClass:
+    Description: choose one of the DB
+    Type: String
+    AllowedValues:
+      - db.t2.micro
+      - db.t2.small
+      - db.t2.medium
+  DBAllocatedStorage:
+    Type: Number
+    Description: Database storage size in GB
+    Default: 8
+    MinValue: 8
+    MaxValue: 20
+    ConstraintDescription: Plase select atleast one value
+  OGSMultiAZ:
+    Type: String
+    Description: Require Multi AZ or not.
+    AllowedValues:
+      - True
+      - False
+    ConstraintDescription: It should be true or false
+  SecurityGroupPorts:
+    Type: List<Number>
+    Description: Using function choose port number of list <webserver-port>,<database-port>
+
+Resources:                                                  # This is the main resource location under perametes
+ WebserverSecurity:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This is for WebserverSecrityGroup
+      VpcId: vpc-0182cdce89419dce3
+      SecurityGroupIngress:
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: 
+            Fn::Select: [ 0, !Ref SecurityGroupPorts ]       #you can use below format for selection or this type
+          ToPort: !Select [ 0, !Ref SecurityGroupPorts ]     # you can choose securitygropport first perameter while inputting perameter section with this.
+          IpProtocol: tcp
+  
+ DatabaseSecurity:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This is for just security for my RDS DB
+      VpcId: vpc-0182cdce89419dce3
+      SecurityGroupIngress:
+        -
+          CidrIp: 0.0.0.0/0
+          FromPort: !Select [ 1, !Ref SecurityGroupPorts ]
+          ToPort: !Select [ 1, !Ref SecurityGroupPorts ]
+          IpProtocol: tcp
+ OGSDbSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: Build for RDS purpose
+      SubnetIds:
+        - subnet-0aa92b80f38028a9e
+        - subnet-0d7ff81fc3292c472
+        - subnet-0d5f2b087321ed1e2
+
+ OGSDatabaseInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceClass: !Ref OGSInstanceClass               # All resources were reference by prameters
+      Engine: mariadb
+      MultiAZ: !Ref OGSMultiAZ
+      PubliclyAccessible: true
+      AllocatedStorage: !Ref DBAllocatedStorage
+      MasterUsername: !Ref DBName
+      MasterUserPassword: 123456789
+      DBSubnetGroupName: !Ref OGSDbSubnetGroup
+      VPCSecurityGroups:
+        - !Ref DatabaseSecurity

@@ -1,0 +1,74 @@
+#Success >> to createVPC & Subnet & routeTable & InternetGateway
+
+AWSTemplateFormatVersion: 2010-09-09
+Description: building all the resources
+Resources: 
+  OgsVpc:
+    Type: AWS::EC2::VPC
+    Properties:
+      CidrBlock: 10.0.0.0/16
+      Tags:
+        - Key: Name
+          Value: OgsVPC2
+  OgsSubnet:
+    Type: AWS::EC2::Subnet
+    Properties:
+      VpcId: !Ref OgsVpc
+      CidrBlock: 10.0.0.0/24
+      MapPublicIpOnLaunch: true
+      Tags:
+        - Key: Name
+          Value: OgsVPC2_SB
+  OgsRouteTable:
+    Type: AWS::EC2::RouteTable
+    Properties:
+      VpcId: !Ref OgsVpc
+  OgsInternetGateway:
+    Type: AWS::EC2::InternetGateway
+    Properties:
+      Tags:
+        - Key: Name
+          Value: OgsVPC2IG
+  OgsVPCGatewayAttachment:
+    Type: AWS::EC2::VPCGatewayAttachment
+    Properties:
+      VpcId: !Ref OgsVpc
+      InternetGatewayId: !Ref OgsInternetGateway
+  OgsRoute:
+    Type: AWS::EC2::Route
+    DependsOn: 
+      - OgsVPCGatewayAttachment
+    Properties:
+      RouteTableId: !Ref OgsRouteTable
+      DestinationCidrBlock: 0.0.0.0/0
+      GatewayId: !Ref OgsInternetGateway
+  OgsSubnetRouteTableAssociation:
+    Type: AWS::EC2::SubnetRouteTableAssociation
+    Properties:
+      RouteTableId: !Ref OgsRouteTable
+      SubnetId: !Ref OgsSubnet
+  OgsEC2instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0e820afa569e84cc1     #ohio
+      InstanceType: t2.micro
+      KeyName: CloudF_Key_1
+      SubnetId: !Ref OgsSubnet
+      SecurityGroupIds:
+        - !Ref OgsSecurityGroup          #should be list/sting with referance.
+      Tags:
+       -  Key: Name
+          Value: OGS_Instance_2
+    DependsOn:                          # one Route and subnetroutetable done then start to build instance
+      - OgsRoute
+      - OgsSubnetRouteTableAssociation
+  OgsSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This security for instance only.
+      VpcId: !Ref OgsVpc
+      SecurityGroupIngress:
+        - IpProtocol: icmp
+          CidrIp: 0.0.0.0/0
+          FromPort: -1
+          ToPort: -1

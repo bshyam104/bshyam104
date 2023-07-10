@@ -1,0 +1,34 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  OGSEc2Mechine:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0e820afa569e84cc1     #ohio
+      InstanceType: t2.micro
+      KeyName: CloudF_Key_1
+      SecurityGroups:
+        - !Ref OGSSecurityGroups
+      Tags:
+        -
+          Key: Name
+          Value: OGS_Instance_1
+        -
+          Key: Project
+          Value: Dev Environment
+  OGSSecurityGroups:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: This security for this EC2  only.
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: 80
+          ToPort: 80
+          CidrIp: 0.0.0.0/24
+      Tags:
+      -
+        Key: Name
+        Value: OGS Security Group
+
+
+#https://docs.aws.amazon.com/AWSCloudFormation/latest/UserGuide/aws-template-resource-type-ref.html >>> link for examle script

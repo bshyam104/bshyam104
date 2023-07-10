@@ -1,0 +1,12 @@
+AWSTemplateFormatVersion: 2010-09-09
+
+Resources:
+  MyVMInstance:
+    Type: AWS::EC2::Instance
+    Properties:
+      ImageId: ami-0e820afa569e84cc1
+      InstanceType: t2.micro
+      KeyName: CloudF_Key_1
+
+#ImageId: ami-022e1a32d3f742bd8 >> verginia
+#ImageId: ami-0e820afa569e84cc1 >> Ohio
