@@ -1,6 +1,40 @@
 AWSTemplateFormatVersion: 2010-09-09
 Description: This template for creation of RDBS service 
 
+## Metadata Section ##
+
+Metadata:
+  AWS::CloudFormation::Interface:
+    ParameterGroups:
+      -
+        Label: 
+          Default: "Network COnfiguration"
+        Parameters:
+          - VpcId
+          - SubnetId
+          - Security GroupId
+      -
+        Label:
+          default: "Database Instance Settings"
+        Parameters:
+          - MultiAZ
+          - AllocatedStorage
+          - MasterUserName
+          - MasterUserPassword
+      -
+        Label:
+          Default:  "Amazon EC2 Configuration"
+        Parameters:
+          - INstanceType
+          - KeyName
+    ParameterLabels:
+      VPPCId:
+        default: "which VPC should this be deployed to"
+      AllocatedStorage:
+        default: Allocated Storage Size
+
+## Parameter Section ##
+
 Parameters:                                             # Perameter always on top ref to the instance
   OGSDBName:
     NoEcho: 'False'
@@ -10,13 +44,6 @@ Parameters:                                             # Perameter always on to
     MinLength: '4'
     MaxLength: '16'
     ConstraintDescription: Must select DB Name
-  OGSInstanceClass:
-    Description: choose one of the DB
-    Type: String
-    AllowedValues:
-      - db.t2.micro
-      - db.t2.small
-      - db.t2.medium
   OGSVpc:
     Type: AWS::EC2::VPC::Id
     Description: Select your VPC
@@ -45,7 +72,24 @@ Parameters:                                             # Perameter always on to
       - True
       - False
     ConstraintDescription: It should be true or false
+  EnvironmentName:
+    Type: String
+    AllowedValues:
+      -  Production
+      - Test
+    Default: Test
 
+## Mappings section ###
+
+Mappings:
+  EnvironmentOptions:
+    Production:
+      DbClass: db.t2.small
+    Test:
+      DbClass: db.t2.micro
+
+
+## Resources Section ##
 Resources:                                                  # This is the main resource location under perametes
  OGSDatabaseSecurity:
     Type: AWS::EC2::SecurityGroup
@@ -71,7 +115,7 @@ Resources:                                                  # This is the main r
  OGSDatabaseInstance:
     Type: AWS::RDS::DBInstance
     Properties:
-      DBInstanceClass: !Ref OGSInstanceClass               # All resources were reference by prameters
+      DBInstanceClass: !FindInMap [ EnvironmentOptions, !Ref EnvironmentName, DbClass ]               
       Engine: mariadb
       MultiAZ: !Ref OGSMultiAZ
       PubliclyAccessible: true
